@@ -9,10 +9,14 @@
 #include <iostream>
 #include <string>
 #include <iomanip>
+#include <fstream>
+#include <sstream>
+
 using namespace std;
 
 
 const int MAX_TASKS = 100;
+const string FILENAME = "tasks.txt";
 
 class Task
 {
@@ -33,14 +37,69 @@ private:
     Task tasks[MAX_TASKS];
     int taskCount;
 
+    void loadTasks()
+    {
+        ifstream inFile(FILENAME);
+        if (!inFile.is_open())
+        {
+            ofstream outFile(FILENAME);
+            outFile.close();
+            taskCount = 0;
+            return;
+        }
+
+        string line;
+        taskCount = 0;
+        
+        while (getline(inFile, line) && taskCount < MAX_TASKS)
+        {
+            stringstream ss(line);
+            getline(ss, tasks[taskCount].title, '|');
+            getline(ss, tasks[taskCount].date, '|');
+            getline(ss, tasks[taskCount].time, '|');
+            getline(ss, tasks[taskCount].description, '|');
+
+            taskCount++;
+        }
+        inFile.close();
+    }
+
+
+    void saveTasks()
+    {
+        ofstream outFile(FILENAME);
+
+        if (outFile.is_open())
+        {
+            for (int i = 0; i < taskCount; ++i)
+            {
+                outFile << tasks[i].title << "|"
+                        << tasks[i].date << "|"
+                        << tasks[i].time << "|"
+                        << tasks[i].description << endl;
+            }
+            outFile.close();
+        }
+    }
+
 public:
-    Scheduler() : taskCount(0) {}
+    Scheduler() : taskCount(0) {
+        loadTasks();
+    }
+
+    ~Scheduler()
+    {
+        saveTasks();
+    }
 
     void addTask() 
     {
+        system("cls");
+
         if (taskCount >= MAX_TASKS)
         {
-            cout << "Task list is full. Cannot add more tasks." << endl;
+            system("cls");
+            cout << "Task list is full. Cannot add more tasks." << endl << endl;
             return;
         }
 
@@ -56,13 +115,14 @@ public:
 
         tasks[taskCount] = Task(title, date, time, description);
         taskCount++;
-        cout << "Task added successfully!" << endl;
-        for (int i = 0; i < 10; ++i)
-            cout << endl;
+        system("cls");
+        cout << "Task added successfully!" << endl << endl;
     }
 
     void viewTasks() 
     {
+        system("cls");
+
         if (taskCount == 0)
         {
             cout << "No tasks scheduled." << endl << endl;
@@ -73,19 +133,21 @@ public:
              << setw(12) << "Date"
              << setw(8) << "Time"
              << "Description" << endl;
-        cout << "-------------------------------------------------------------\n";
+        cout << "-------------------------------------------------------------" << endl;
 
         for (int i = 0; i < taskCount; ++i)
             cout << left << setw(20) << tasks[i].title
                  << setw(12) << tasks[i].date
                  << setw(8) << tasks[i].time
                  << tasks[i].description << endl;
-        for (int i = 0; i < 10; ++i)
-            cout << endl;
+        
+        cout <<"\n\n";
     }
 
     void deleteTask() 
     {
+        system("cls");
+
         string title;
         cout << "Enter the title of the task to delete: ";
         getline(cin, title);
@@ -104,14 +166,14 @@ public:
                 tasks[i] = tasks[i + 1];
             
             taskCount--;
-            cout << "Task deleted successfully!" << endl;
-            for (int i = 0; i < 10; ++i)
-                cout << endl;
+            system("cls");
+            cout << "Task deleted successfully!" << endl << endl;
         }
         else
-            cout << "Task not found." << endl;
-        for (int i = 0; i < 10; ++i)
-            cout << endl;
+        {
+            system("cls");
+            cout << endl << endl << "Task not found." << endl << endl;
+        }
     }
 };
 
@@ -129,13 +191,12 @@ int main()
 {
     Scheduler scheduler;
     int choice;
-    string version = "0.1.0";
+    string version = "0.1.1";
 
     while (true)
     {
         displayMenu(version);
         cin >> choice;
-
         cin.ignore();
 
         switch (choice) 
@@ -150,6 +211,7 @@ int main()
             scheduler.deleteTask();
             break;
         case 4:
+            system("cls");
             cout << "Exiting the application." << endl;
             return 0;
         default:
